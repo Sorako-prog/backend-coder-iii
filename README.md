@@ -1,227 +1,146 @@
-# Backend III - Entrega N°1
+# Backend III - Entrega Final
 
 **Alumno:** Carlos Gonzalez  
 **Comisión:** 94535
 
 ## Descripción
 
-Este proyecto implementa un sistema de mocking para generar datos de prueba (usuarios y mascotas) utilizando Express.js y MongoDB. Incluye endpoints para generar datos ficticios y almacenarlos en la base de datos.
+Sistema de gestión de adopciones de mascotas desarrollado con Express.js y MongoDB. Incluye endpoints para usuarios, mascotas, mocking de datos y gestión de adopciones. Documentado con Swagger.
 
-## Estructura del Proyecto
+## Imagen Docker
+
+La imagen del proyecto está disponible en DockerHub:
 
 ```
-coder - backend iii/
-├── app.js
-├── package.json
-├── models/
-│   ├── User.js
-│   └── Pet.js
-├── routes/
-│   ├── mocks.router.js
-│   ├── users.router.js
-│   └── pets.router.js
-└── utils/
-    └── mocking.js
+docker pull sorakogg/backend-iii:latest
 ```
 
-## Instalación
+## Ejecución con Docker
 
-1. Clonar el repositorio o descargar los archivos del proyecto.
+### Opción 1: Usando la imagen de DockerHub
 
-2. Instalar las dependencias:
+```bash
+docker pull sorakogg/backend-iii:latest
+docker run -p 8080:8080 -e MONGO_URI=mongodb://host.docker.internal:27017/coder sorakogg/backend-iii:latest
+```
+
+### Opción 2: Construir la imagen localmente
+
+```bash
+docker build -t backend-iii .
+docker run -p 8080:8080 -e MONGO_URI=mongodb://host.docker.internal:27017/coder backend-iii
+```
+
+### Variables de entorno
+
+| Variable | Descripción | Valor por defecto |
+|----------|-------------|-------------------|
+| `PORT` | Puerto del servidor | 8080 |
+| `MONGO_URI` | URI de conexión a MongoDB | mongodb://localhost:27017/coder |
+
+## Instalación Local
+
+1. Clonar el repositorio:
+```bash
+git clone [URL_DEL_REPO]
+cd backend-iii
+```
+
+2. Instalar dependencias:
 ```bash
 npm install
 ```
 
-3. Asegurarse de que MongoDB esté corriendo en `localhost:27017`.
+3. Iniciar MongoDB (debe estar corriendo en localhost:27017).
 
 4. Iniciar el servidor:
 ```bash
 npm start
 ```
 
-Para modo desarrollo con nodemon:
+Para desarrollo con hot-reload:
 ```bash
 npm run dev
 ```
 
-El servidor se iniciará en el puerto 8080 por defecto.
+## Documentación API (Swagger)
+
+Una vez iniciado el servidor, acceder a:
+```
+http://localhost:8080/api-docs
+```
 
 ## Endpoints
 
-### Router de Mocks (`/api/mocks`)
+### Usuarios (`/api/users`)
 
-#### GET `/api/mocks/mockingpets`
-Genera 50 mascotas ficticias sin insertarlas en la base de datos.
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/users` | Lista todos los usuarios |
+| GET | `/api/users/:id` | Obtiene un usuario por ID |
 
-**Ejemplo de uso:**
+### Mascotas (`/api/pets`)
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/pets` | Lista todas las mascotas |
+| GET | `/api/pets/:id` | Obtiene una mascota por ID |
+
+### Adopciones (`/api/adoptions`)
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/adoptions` | Lista todas las adopciones |
+| GET | `/api/adoptions/:aid` | Obtiene una adopción por ID |
+| POST | `/api/adoptions/:uid/:pid` | Crea una adopción |
+| DELETE | `/api/adoptions/:aid` | Elimina una adopción |
+
+### Mocks (`/api/mocks`)
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/mocks/mockingpets` | Genera 50 mascotas ficticias |
+| GET | `/api/mocks/mockingusers` | Genera usuarios ficticios |
+| POST | `/api/mocks/generateData` | Genera e inserta datos en BD |
+
+## Tests
+
+Ejecutar los tests funcionales:
 ```bash
-GET http://localhost:8080/api/mocks/mockingpets
+npm test
 ```
 
-**Respuesta:**
-```json
-{
-  "status": "success",
-  "payload": [
-    {
-      "name": "Max",
-      "species": "dog",
-      "breed": "Labrador",
-      "age": 5
-    },
-    ...
-  ]
-}
+Los tests utilizan `mongodb-memory-server` para crear una base de datos en memoria, evitando dependencia de MongoDB externo durante la ejecución de tests.
+
+## Estructura del Proyecto
+
+```
+backend-iii/
+├── app.js
+├── package.json
+├── Dockerfile
+├── .dockerignore
+├── models/
+│   ├── User.js
+│   ├── Pet.js
+│   └── Adoption.js
+├── routes/
+│   ├── mocks.router.js
+│   ├── users.router.js
+│   ├── pets.router.js
+│   └── adoption.router.js
+├── utils/
+│   └── mocking.js
+└── test/
+    └── adoption.test.js
 ```
 
-#### GET `/api/mocks/mockingusers`
-Genera usuarios ficticios con formato de MongoDB. Por defecto genera 50 usuarios, pero se puede especificar una cantidad mediante query parameter.
+## Tecnologías
 
-**Características de los usuarios generados:**
-- Password encriptada: "coder123"
-- Role: alterna entre "user" y "admin"
-- Pets: array vacío
-- Formato compatible con MongoDB
-
-**Ejemplo de uso:**
-```bash
-GET http://localhost:8080/api/mocks/mockingusers
-GET http://localhost:8080/api/mocks/mockingusers?quantity=10
-```
-
-**Respuesta:**
-```json
-{
-  "status": "success",
-  "payload": [
-    {
-      "_id": "...",
-      "first_name": "John",
-      "last_name": "Doe",
-      "email": "john.doe@example.com",
-      "age": 25,
-      "password": "$2b$10$...",
-      "role": "user",
-      "pets": [],
-      "createdAt": "2025-11-13T...",
-      "updatedAt": "2025-11-13T..."
-    },
-    ...
-  ]
-}
-```
-
-#### POST `/api/mocks/generateData`
-Genera e inserta usuarios y mascotas en la base de datos según los parámetros proporcionados.
-
-**Parámetros requeridos:**
-- `users`: número de usuarios a generar e insertar
-- `pets`: número de mascotas a generar e insertar
-
-**Ejemplo de uso:**
-```bash
-POST http://localhost:8080/api/mocks/generateData
-Content-Type: application/json
-
-{
-  "users": 10,
-  "pets": 15
-}
-```
-
-**Respuesta:**
-```json
-{
-  "status": "success",
-  "message": "Datos generados e insertados correctamente",
-  "payload": {
-    "users": 10,
-    "pets": 15
-  }
-}
-```
-
-### Router de Usuarios (`/api/users`)
-
-#### GET `/api/users`
-Obtiene todos los usuarios almacenados en la base de datos.
-
-**Ejemplo de uso:**
-```bash
-GET http://localhost:8080/api/users
-```
-
-#### GET `/api/users/:id`
-Obtiene un usuario específico por su ID.
-
-**Ejemplo de uso:**
-```bash
-GET http://localhost:8080/api/users/507f1f77bcf86cd799439011
-```
-
-### Router de Mascotas (`/api/pets`)
-
-#### GET `/api/pets`
-Obtiene todas las mascotas almacenadas en la base de datos.
-
-**Ejemplo de uso:**
-```bash
-GET http://localhost:8080/api/pets
-```
-
-#### GET `/api/pets/:id`
-Obtiene una mascota específica por su ID.
-
-**Ejemplo de uso:**
-```bash
-GET http://localhost:8080/api/pets/507f1f77bcf86cd799439011
-```
-
-## Flujo de Trabajo Recomendado
-
-1. **Generar datos de prueba:**
-   ```bash
-   POST http://localhost:8080/api/mocks/generateData
-   Body: { "users": 5, "pets": 8 }
-   ```
-
-2. **Verificar usuarios insertados:**
-   ```bash
-   GET http://localhost:8080/api/users
-   ```
-
-3. **Verificar mascotas insertadas:**
-   ```bash
-   GET http://localhost:8080/api/pets
-   ```
-
-4. **Probar generación sin insertar:**
-   ```bash
-   GET http://localhost:8080/api/mocks/mockingusers?quantity=3
-   GET http://localhost:8080/api/mocks/mockingpets
-   ```
-
-## Tecnologías Utilizadas
-
-- **Node.js**: Entorno de ejecución
-- **Express.js**: Framework web
-- **MongoDB**: Base de datos NoSQL
-- **Mongoose**: ODM para MongoDB
-- **bcrypt**: Encriptación de contraseñas
-- **faker**: Generación de datos ficticios
-
-## Dependencias
-
-- express: ^4.18.2
-- mongoose: ^7.5.0
-- bcrypt: ^5.1.1
-- faker: ^5.5.3
-
-## Notas
-
-- La base de datos utilizada es `coder` en MongoDB.
-- Todos los usuarios generados tienen la contraseña "coder123" encriptada.
-- Los roles se asignan aleatoriamente entre "user" y "admin".
-- Los arrays de pets en usuarios generados están vacíos por defecto.
-
+- **Node.js** - Entorno de ejecución
+- **Express.js** - Framework web
+- **MongoDB** - Base de datos
+- **Mongoose** - ODM
+- **Swagger** - Documentación de API
+- **Mocha/Chai** - Testing
+- **Docker** - Containerización
