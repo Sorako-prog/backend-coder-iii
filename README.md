@@ -42,7 +42,7 @@ docker run -p 8080:8080 -e MONGO_URI=mongodb://host.docker.internal:27017/coder 
 
 1. Clonar el repositorio:
 ```bash
-git clone [URL_DEL_REPO]
+git clone https://github.com/Sorako-prog/backend-coder-iii.git
 cd backend-iii
 ```
 
